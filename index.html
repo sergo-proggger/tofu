@@ -1,0 +1,750 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Свежий тофу 300 и 500 г из соевых бобов, воды и нигари. Где купить, ближайшие поставки, опт для магазинов и кафе.">
+<meta name="theme-color" content="#1E2A4A">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Соевая лавка">
+<meta property="og:title" content="Соевая лавка — свежий тофу 300 и 500 г">
+<meta property="og:description" content="Макет сайта: размеры, состав, ближайшие поставки и где купить.">
+<meta property="og:url" content="https://sergo-proggger.github.io/tofu/">
+<meta property="og:image" content="https://sergo-proggger.github.io/tofu/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="ru_RU">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<title>Соевая лавка</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Prata&family=Onest:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="vendor/swiper-bundle.min.css">
+<script src="vendor/three.min.js"></script>
+<script src="vendor/gsap.min.js"></script>
+<script src="vendor/ScrollTrigger.min.js"></script>
+<script src="vendor/lenis.min.js"></script>
+<script src="vendor/swiper-bundle.min.js"></script>
+<style>
+/* Layout: японская тофу-лавка. Индиго, как у занавески-норэн, белый тофу и деревянная доска.
+   Главный приём: блок на доске при прокрутке режется на кубики (three.js + ScrollTrigger). Остальное спокойно, на светлой бумаге. */
+:root {
+  --paper: #F6F5F0;
+  --surface: #FFFFFF;
+  --ink: #161A2A;
+  --muted: #5B6072;
+  --line: #DEDDD5;
+  --indigo: #1E2A4A;
+  --indigo-2: #26355C;
+  --on-indigo: #F2F1EA;
+  --on-indigo-muted: #A9B0C6;
+  --soy: #E2B44E;
+  --tofu: #F3EBD6;
+  --tofu-edge: #CDBF9C;
+  --font-display: "Prata", "Georgia", "Times New Roman", serif;
+  --font-body: "Onest", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0E111B; --surface: #151A28; --ink: #E8E9EF; --muted: #9CA2B5; --line: #262C3E;
+    --indigo: #17203A; --indigo-2: #1E2A48; --tofu: #E9E1CB; --tofu-edge: #A99D80;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0E111B; --surface: #151A28; --ink: #E8E9EF; --muted: #9CA2B5; --line: #262C3E;
+  --indigo: #17203A; --indigo-2: #1E2A48; --tofu: #E9E1CB; --tofu-edge: #A99D80;
+  color-scheme: dark;
+}
+
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 400 17px/1.6 var(--font-body); overflow-x: hidden; }
+.g { padding-inline: clamp(16px, 4vw, 56px); }
+.wrap { max-width: 1280px; margin-inline: auto; }
+h1, h2, h3 { font-family: var(--font-display); font-weight: 400; margin: 0; text-wrap: balance; letter-spacing: -0.01em; }
+h2 { font-size: clamp(36px, 5vw, 66px); line-height: 1.05; }
+h3 { font-size: 24px; line-height: 1.2; }
+p { margin: 0; }
+a { color: inherit; }
+:focus-visible { outline: 2px solid var(--soy); outline-offset: 3px; }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 10px; min-height: 50px; padding: 0 24px;
+  border-radius: 4px; border: 1px solid var(--ink); background: var(--ink); color: var(--paper);
+  font: 500 16px/1 var(--font-body); text-decoration: none; cursor: pointer;
+  transition: background .25s, color .25s, border-color .25s;
+}
+.btn:hover { background: var(--indigo-2); border-color: var(--indigo-2); color: var(--on-indigo); }
+.btn.soy { background: var(--soy); border-color: var(--soy); color: #161A2A; }
+.btn.soy:hover { background: var(--on-indigo); border-color: var(--on-indigo); color: #161A2A; }
+
+/* шапка — полоса-норэн */
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 30; background: var(--indigo); color: var(--on-indigo); }
+.top .wrap { height: 64px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+.logo { display: inline-flex; align-items: center; gap: 12px; text-decoration: none; font-family: var(--font-display); font-size: 21px; }
+.logo i { width: 26px; height: 20px; display: inline-block; border-top: 3px solid var(--on-indigo);
+  background: repeating-linear-gradient(90deg, var(--on-indigo) 0 7px, transparent 7px 9.5px); opacity: .92; }
+.menu { display: flex; gap: 28px; font-size: 15px; }
+.menu a { text-decoration: none; color: var(--on-indigo-muted); transition: color .2s; }
+.menu a:hover { color: var(--on-indigo); }
+.top .btn { min-height: 40px; padding: 0 16px; font-size: 15px; }
+.draft { background: var(--soy); color: #161A2A; text-align: center; font-size: 13px; padding: 6px 16px; }
+
+/* первый экран */
+.hero { background: var(--indigo); color: var(--on-indigo); position: relative; overflow: hidden; }
+.hero .wrap { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 24px; align-items: center;
+  min-height: clamp(560px, calc(100vh - 64px), 860px); padding-block: 40px; }
+.hero h1 { font-size: clamp(46px, 6.4vw, 96px); line-height: 1; }
+.hero h1 .ln { display: block; overflow: hidden; padding-bottom: .08em; }
+.hero h1 .ln > span { display: inline-block; }
+.hero .lead { color: var(--on-indigo-muted); font-size: 18px; max-width: 25em; margin-top: 24px; }
+.sizes { display: inline-grid; grid-template-columns: repeat(2, auto); margin-top: 32px; border: 1px solid color-mix(in srgb, var(--on-indigo) 30%, transparent); border-radius: 4px; overflow: hidden; }
+.sizes button { background: transparent; border: 0; color: var(--on-indigo); font: 500 16px/1 var(--font-body); padding: 14px 22px; cursor: pointer; transition: background .25s, color .25s; }
+.sizes button + button { border-left: 1px solid color-mix(in srgb, var(--on-indigo) 30%, transparent); }
+.sizes button.on { background: var(--on-indigo); color: var(--indigo); }
+.state { margin-top: 22px; min-height: 52px; }
+.state b { display: block; font-weight: 500; font-size: 17px; }
+.state span { font-family: var(--font-mono); font-size: 13px; color: var(--on-indigo-muted); }
+.scrollhint { display: flex; align-items: center; gap: 12px; margin-top: 30px; font-size: 14px; color: var(--on-indigo-muted); }
+.scrollhint i { width: 1px; height: 36px; background: color-mix(in srgb, var(--on-indigo) 35%, transparent); position: relative; overflow: hidden; }
+.scrollhint i::after { content: ""; position: absolute; left: 0; top: -40%; width: 1px; height: 40%; background: var(--soy); animation: drip 1.8s ease-in-out infinite; }
+@keyframes drip { to { top: 100%; } }
+.stage { position: relative; height: clamp(360px, 58vh, 640px); }
+.stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.stage .fallback { position: absolute; inset: 15% 10%; width: 80%; height: 70%; }
+.stage.gl .fallback { display: none; }
+.fallback .t { fill: #FBF8EF; } .fallback .l { fill: #EDE6D3; } .fallback .r { fill: #E2D9C1; } .fallback .b { fill: #C79C68; }
+.fallback polygon { stroke: #CFC4A6; stroke-width: 1; stroke-linejoin: round; }
+
+section.block { padding-block: clamp(72px, 10vw, 140px); }
+.sec-head { display: grid; gap: 16px; max-width: 760px; margin-bottom: clamp(36px, 5vw, 60px); }
+.sec-head p { color: var(--muted); font-size: 18px; max-width: 36em; }
+
+/* сравнение размеров */
+.compare { border-top: 2px solid var(--ink); }
+.compare .row { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: baseline; padding: 16px 0; border-bottom: 1px solid var(--line); }
+.compare .row > :first-child { color: var(--muted); font-size: 15px; }
+.compare .row > :not(:first-child) { font-family: var(--font-mono); font-size: 15px; font-variant-numeric: tabular-nums; }
+.compare .head { padding: 26px 0 22px; }
+.compare .head > :not(:first-child) { font-family: var(--font-display); font-size: clamp(56px, 8vw, 120px); line-height: .9; letter-spacing: -0.02em; }
+.compare .head small { font-size: .35em; margin-left: .1em; }
+.compare .head > :first-child { font-size: 15px; align-self: end; }
+.compare .price > :not(:first-child) { font-family: var(--font-display); font-size: 30px; }
+
+/* состав */
+.compo { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: clamp(32px, 6vw, 96px); align-items: start; }
+.statement { font-family: var(--font-display); font-size: clamp(34px, 4.6vw, 62px); line-height: 1.15; letter-spacing: -0.01em; position: relative; z-index: 0; }
+.statement .u { position: relative; white-space: nowrap; }
+.statement .u::after { content: ""; position: absolute; left: 0; right: 0; bottom: .04em; height: .12em; background: var(--soy); transform-origin: left; transform: scaleX(var(--s, 1)); z-index: -1; }
+.compo .note { color: var(--muted); margin-top: 26px; max-width: 34em; font-size: 18px; }
+.label { background: var(--surface); border: 1.5px solid var(--ink); padding: 16px 18px 6px; }
+.label .lt { font-weight: 600; font-size: 20px; padding-bottom: 8px; border-bottom: 8px solid var(--ink); }
+.label .r { display: flex; justify-content: space-between; gap: 16px; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 15px; }
+.label .r:last-child { border-bottom: 0; }
+.label .r.big { border-bottom: 3px solid var(--ink); font-weight: 600; }
+.label .r span:last-child { font-family: var(--font-mono); font-size: 14px; }
+
+/* производство — слайдер */
+.prod { background: var(--indigo-2); color: var(--on-indigo); }
+.prod .sec-head p { color: var(--on-indigo-muted); }
+.prod-top { display: flex; justify-content: space-between; align-items: end; gap: 24px; flex-wrap: wrap; margin-bottom: clamp(36px, 5vw, 60px); }
+.navs { display: flex; gap: 10px; }
+.navs button { width: 52px; height: 52px; border-radius: 50%; border: 1px solid color-mix(in srgb, var(--on-indigo) 35%, transparent); background: transparent; color: var(--on-indigo); font-size: 20px; cursor: pointer; transition: background .2s, color .2s; }
+.navs button:hover { background: var(--on-indigo); color: var(--indigo); }
+.navs button.swiper-button-disabled { opacity: .35; cursor: default; }
+.steps-swiper { overflow: hidden; }
+.step { background: var(--indigo); border-radius: 6px; padding: 28px; min-height: 300px; display: flex; flex-direction: column; gap: 14px; height: auto; }
+.step .n { font-family: var(--font-mono); font-size: 13px; color: var(--on-indigo-muted); }
+.step .time { font-family: var(--font-display); font-size: clamp(40px, 4vw, 56px); line-height: 1; color: var(--soy); margin-top: auto; }
+.step h3 { color: var(--on-indigo); }
+.step p { color: var(--on-indigo-muted); font-size: 15px; }
+.prog { position: relative; height: 2px; margin-top: 32px; background: color-mix(in srgb, var(--on-indigo) 18%, transparent); }
+.prog .swiper-pagination-progressbar-fill { background: var(--soy) !important; }
+
+/* как резать */
+.recipes { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; }
+.recipe { display: grid; gap: 14px; align-content: start; }
+.recipe .cut { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; aspect-ratio: 4 / 3; max-width: 100%; display: grid; place-items: center; padding: 18px; }
+.recipe .cut svg { width: 100%; height: 100%; }
+.cut rect, .cut circle { fill: var(--tofu); stroke: var(--tofu-edge); stroke-width: 1; }
+.recipe .meta { font-family: var(--font-mono); font-size: 13px; color: var(--muted); }
+.recipe p { color: var(--muted); font-size: 15px; }
+
+/* где купить */
+.buy { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 20px; }
+.buy .list { border-top: 2px solid var(--ink); }
+.buy .list div { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 16px; padding: 18px 0; border-bottom: 1px solid var(--line); }
+.buy .list b { font-weight: 500; }
+.buy .list span { font-family: var(--font-mono); font-size: 14px; color: var(--muted); text-align: right; }
+.opt { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: clamp(24px, 3vw, 36px); display: grid; gap: 16px; align-content: start; }
+.opt p { color: var(--muted); }
+.opt dl { margin: 0; display: grid; grid-template-columns: auto minmax(0, 1fr); }
+.opt dt, .opt dd { margin: 0; padding: 10px 0; border-top: 1px solid var(--line); font-size: 15px; }
+.opt dt { color: var(--muted); padding-right: 16px; }
+.opt dd { text-align: right; font-family: var(--font-mono); font-size: 14px; }
+.opt .btn { justify-self: start; }
+
+/* ближайшие поставки */
+.supply { border-top: 2px solid var(--ink); }
+.sup { display: grid; grid-template-columns: 110px minmax(0, 1.5fr) minmax(0, 1fr) auto; gap: 24px; align-items: center; padding: 20px 0; border-bottom: 1px solid var(--line); }
+.sup .d b { font-family: var(--font-body); font-weight: 500; font-size: 44px; line-height: 1; letter-spacing: -0.04em; display: block; font-variant-numeric: tabular-nums; }
+.sup .d span { font-family: var(--font-mono); font-size: 13px; color: var(--muted); }
+.sup .w b { font-weight: 500; display: block; }
+.sup .w span { color: var(--muted); font-size: 15px; }
+.sup .it { display: flex; flex-wrap: wrap; gap: 6px; }
+.sup .it span { font-family: var(--font-mono); font-size: 13px; border: 1px solid var(--line); border-radius: 999px; padding: 4px 10px; }
+.sup .act { display: flex; align-items: center; gap: 14px; justify-content: flex-end; }
+.st { font-size: 14px; padding: 6px 12px; border-radius: 999px; white-space: nowrap; }
+.st.open { background: color-mix(in srgb, var(--soy) 28%, transparent); }
+.st.few { background: var(--soy); color: #161A2A; }
+.st.full { color: var(--muted); border: 1px solid var(--line); }
+.sup .act a { font-size: 15px; white-space: nowrap; text-underline-offset: 3px; }
+.sup.past-full { opacity: .6; }
+.supply-note { margin-top: 20px; color: var(--muted); font-size: 15px; }
+.soon { margin-top: clamp(48px, 6vw, 72px); display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); gap: clamp(24px, 5vw, 72px); align-items: start; }
+.soon p.lead2 { color: var(--muted); margin-top: 12px; font-size: 16px; }
+.soon ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.soon li { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 20px 22px; display: grid; gap: 6px; align-content: start; }
+.soon li .m { font-family: var(--font-mono); font-size: 13px; color: var(--muted); }
+.soon li b { font-family: var(--font-display); font-weight: 400; font-size: 22px; line-height: 1.2; }
+.soon li span:last-child { color: var(--muted); font-size: 15px; }
+@media (max-width: 860px) { .soon, .soon ul { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 860px) {
+  .sup { grid-template-columns: 84px minmax(0, 1fr); gap: 8px 18px; align-items: start; }
+  .sup .d { grid-row: span 3; }
+  .sup .d b { font-size: 38px; }
+  .sup .act { justify-content: flex-start; }
+}
+
+/* контакты и подвал */
+.foot { background: var(--indigo); color: var(--on-indigo); padding-block: clamp(72px, 10vw, 130px) 28px; overflow: hidden; }
+.contacts { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: clamp(32px, 6vw, 96px); align-items: start; }
+.contacts .muted { color: var(--on-indigo-muted); }
+.phone { font-family: var(--font-display); font-size: clamp(38px, 5.6vw, 80px); line-height: 1; margin-top: 26px; font-variant-numeric: tabular-nums; }
+.chips { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 26px; }
+.chips span { border: 1px solid color-mix(in srgb, var(--on-indigo) 30%, transparent); border-radius: 999px; padding: 9px 16px; font-size: 15px; }
+.addr { margin-top: 26px; }
+form.cb { background: var(--indigo-2); border-radius: 6px; padding: clamp(24px, 3vw, 34px); display: grid; gap: 16px; }
+form.cb label { display: grid; gap: 6px; font-size: 14px; color: var(--on-indigo-muted); }
+form.cb input { font: 400 16px/1.4 var(--font-body); color: var(--on-indigo); background: var(--indigo); border: 1px solid color-mix(in srgb, var(--on-indigo) 22%, transparent); border-radius: 4px; padding: 14px 16px; width: 100%; }
+form.cb input:focus { outline: none; border-color: var(--soy); }
+form.cb .msg { font-size: 15px; padding: 12px 14px; border-radius: 4px; background: var(--indigo); color: var(--on-indigo); border-left: 3px solid var(--soy); }
+.word { font-family: var(--font-display); font-size: clamp(60px, 14.5vw, 220px); line-height: .85; white-space: nowrap; margin-top: clamp(56px, 8vw, 110px); letter-spacing: -0.02em; }
+.legal { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; font-size: 14px; color: var(--on-indigo-muted); border-top: 1px solid color-mix(in srgb, var(--on-indigo) 18%, transparent); padding-top: 20px; margin-top: 28px; }
+
+@media (max-width: 1080px) { .menu { display: none; } }
+@media (max-width: 960px) {
+  .hero .wrap { grid-template-columns: minmax(0, 1fr); min-height: 0; padding-block: 20px 40px; }
+  .stage { order: -1; height: clamp(300px, 70vw, 460px); }
+  .compo, .buy, .contacts { grid-template-columns: minmax(0, 1fr); }
+  .recipes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 600px) {
+  body { font-size: 16px; }
+  .top .btn { display: none; }
+  .recipes { grid-template-columns: minmax(0, 1fr); }
+  .compare .row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
+  .compare .row > :not(:first-child) { font-size: 13px; }
+  .compare .head > :not(:first-child) { font-size: 52px; }
+  .compare .price > :not(:first-child) { font-size: 22px; }
+  .word { font-size: 14vw; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+</head>
+<body>
+<div class="draft">Черновик дизайна. Название, цены, цифры и тексты примерные, заменим на ваши.</div>
+
+<header class="top g">
+  <div class="wrap">
+    <a class="logo" href="#top"><i></i>Соевая лавка</a>
+    <nav class="menu" aria-label="Разделы">
+      <a href="#sizes">Размеры</a>
+      <a href="#sostav">Состав</a>
+      <a href="#prod">Производство</a>
+      <a href="#recipes">Как резать</a>
+      <a href="#supply">Поставки</a>
+      <a href="#buy">Где купить</a>
+    </nav>
+    <a class="btn soy" href="#contacts">Связаться</a>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero g" id="hero">
+    <div class="wrap">
+      <div>
+        <h1><span class="ln"><span>Тофу, который</span></span><span class="ln"><span>держит форму</span></span></h1>
+        <p class="lead">Варим каждый день из соевых бобов, воды и нигари. Плотный, режется ровно и не крошится на сковороде.</p>
+        <div class="sizes" role="group" aria-label="Размер блока">
+          <button type="button" data-size="300">300 г</button>
+          <button type="button" data-size="500" class="on">500 г</button>
+        </div>
+        <div class="state" aria-live="polite"><b id="stateTitle">Целый блок 500 г</b><span id="stateMeta">12 × 8 × 5 см · на 4–5 порций</span></div>
+        <div class="scrollhint"><i></i>Прокрутите вниз, и мы его нарежем</div>
+      </div>
+      <div class="stage" id="stage">
+        <canvas id="gl" aria-label="Блок тофу на доске, при прокрутке режется на кубики"></canvas>
+        <svg class="fallback" viewBox="0 0 400 240" role="img" aria-label="Блок тофу на доске">
+          <polygon class="b" points="200,236 20,132 200,28 380,132"></polygon>
+          <polygon class="l" points="200,180 117,132 117,72 200,120"></polygon>
+          <polygon class="r" points="200,180 325,108 325,48 200,120"></polygon>
+          <polygon class="t" points="200,120 325,48 242,0 117,72"></polygon>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <section class="block g" id="sizes">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>Два размера одного тофу</h2>
+        <p>Рецепт и плотность одинаковые. Отличается только вес блока, берите под то, сколько готовите за раз.</p>
+      </div>
+      <div class="compare" role="table" aria-label="Сравнение блоков 300 и 500 г">
+        <div class="row head" role="row"><span role="rowheader">Блок</span><span role="cell">300<small>г</small></span><span role="cell">500<small>г</small></span></div>
+        <div class="row" role="row"><span role="rowheader">Размер</span><span role="cell">≈ 10 × 7 × 4 см</span><span role="cell">≈ 12 × 8 × 5 см</span></div>
+        <div class="row" role="row"><span role="rowheader">Хватит на</span><span role="cell">2–3 порции</span><span role="cell">4–5 порций</span></div>
+        <div class="row" role="row"><span role="rowheader">Белок</span><span role="cell">12 г / 100 г</span><span role="cell">12 г / 100 г</span></div>
+        <div class="row" role="row"><span role="rowheader">Хранение</span><span role="cell">+2…+6 °C, 10 суток</span><span role="cell">+2…+6 °C, 10 суток</span></div>
+        <div class="row" role="row"><span role="rowheader">Упаковка</span><span role="cell">вакуум</span><span role="cell">вакуум</span></div>
+        <div class="row price" role="row"><span role="rowheader">Цена</span><span role="cell">190 ₽</span><span role="cell">290 ₽</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block g" id="sostav" style="padding-top:0">
+    <div class="wrap compo">
+      <div>
+        <p class="statement">В составе только <span class="u">соевые бобы</span>, <span class="u">вода</span> и&nbsp;<span class="u">нигари</span>.</p>
+        <p class="note">Нигари — морская соль магния. Ею сворачивают соевое молоко в японских тофу-лавках, от неё у тофу мягкий вкус и плотная текстура.</p>
+      </div>
+      <div class="label">
+        <div class="lt">Пищевая ценность на 100 г</div>
+        <div class="r big"><span>Энергетическая ценность</span><span>120 ккал</span></div>
+        <div class="r"><span>Белки</span><span>12 г</span></div>
+        <div class="r"><span>Жиры</span><span>7 г</span></div>
+        <div class="r"><span>Углеводы</span><span>2 г</span></div>
+        <div class="r"><span>Кальций</span><span>350 мг</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block prod g" id="prod">
+    <div class="wrap">
+      <div class="prod-top">
+        <div class="sec-head" style="margin-bottom:0">
+          <h2>Как мы делаем тофу</h2>
+          <p>Небольшое производство, варка каждый день. В магазины уходит тофу, сделанный накануне.</p>
+        </div>
+        <div class="navs"><button type="button" class="prev" aria-label="Предыдущий этап">←</button><button type="button" class="next" aria-label="Следующий этап">→</button></div>
+      </div>
+      <div class="swiper steps-swiper">
+        <div class="swiper-wrapper">
+          <div class="swiper-slide step"><span class="n">Этап 1 из 5</span><h3>Замачиваем бобы</h3><p>Соя набирает воду и становится почти вдвое больше.</p><span class="time">10–12 ч</span></div>
+          <div class="swiper-slide step"><span class="n">Этап 2 из 5</span><h3>Варим соевое молоко</h3><p>Перемалываем бобы с водой, проваренное молоко отделяем от жмыха.</p><span class="time">≈ 100 °C</span></div>
+          <div class="swiper-slide step"><span class="n">Этап 3 из 5</span><h3>Добавляем нигари</h3><p>Молоко сворачивается в нежные хлопья.</p><span class="time">15 мин</span></div>
+          <div class="swiper-slide step"><span class="n">Этап 4 из 5</span><h3>Прессуем в формах</h3><p>Сыворотка уходит, блок становится плотным и ровным.</p><span class="time">20–30 мин</span></div>
+          <div class="swiper-slide step"><span class="n">Этап 5 из 5</span><h3>Охлаждаем и упаковываем</h3><p>Каждый блок в вакуумной упаковке с датой изготовления.</p><span class="time">+4 °C</span></div>
+        </div>
+      </div>
+      <div class="prog"></div>
+    </div>
+  </section>
+
+  <section class="block g" id="recipes">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>Как резать и что готовить</h2>
+        <p>У тофу почти нет своего вкуса, он берёт вкус маринада и соуса. Главное — правильно нарезать.</p>
+      </div>
+      <div class="recipes">
+        <div class="recipe">
+          <div class="cut"><svg viewBox="0 0 120 80" aria-hidden="true"><rect x="8" y="10" width="18" height="18" rx="2"/><rect x="30" y="10" width="18" height="18" rx="2"/><rect x="52" y="10" width="18" height="18" rx="2"/><rect x="74" y="10" width="18" height="18" rx="2"/><rect x="96" y="10" width="18" height="18" rx="2"/><rect x="8" y="32" width="18" height="18" rx="2"/><rect x="30" y="32" width="18" height="18" rx="2"/><rect x="52" y="32" width="18" height="18" rx="2"/><rect x="74" y="32" width="18" height="18" rx="2"/><rect x="96" y="32" width="18" height="18" rx="2"/><rect x="8" y="54" width="18" height="18" rx="2"/><rect x="30" y="54" width="18" height="18" rx="2"/><rect x="52" y="54" width="18" height="18" rx="2"/><rect x="74" y="54" width="18" height="18" rx="2"/><rect x="96" y="54" width="18" height="18" rx="2"/></svg></div>
+          <span class="meta">кубик 2 см · 15 мин</span><h3>Хрустящие кубики</h3><p>Обвалять в крахмале, обжарить на сильном огне и полить соевым соусом.</p>
+        </div>
+        <div class="recipe">
+          <div class="cut"><svg viewBox="0 0 120 80" aria-hidden="true"><rect x="10" y="12" width="11" height="56" rx="2"/><rect x="25" y="12" width="11" height="56" rx="2"/><rect x="40" y="12" width="11" height="56" rx="2"/><rect x="55" y="12" width="11" height="56" rx="2"/><rect x="70" y="12" width="11" height="56" rx="2"/><rect x="85" y="12" width="11" height="56" rx="2"/><rect x="100" y="12" width="11" height="56" rx="2"/></svg></div>
+          <span class="meta">ломтик 1 см · 30 мин</span><h3>Запечь с овощами</h3><p>Замариновать ломтики на час и запечь с перцем и брокколи при 200 °C.</p>
+        </div>
+        <div class="recipe">
+          <div class="cut"><svg viewBox="0 0 120 80" aria-hidden="true"><rect x="12" y="14" width="10" height="10" rx="1.5"/><rect x="26" y="14" width="10" height="10" rx="1.5"/><rect x="40" y="14" width="10" height="10" rx="1.5"/><rect x="54" y="14" width="10" height="10" rx="1.5"/><rect x="68" y="14" width="10" height="10" rx="1.5"/><rect x="82" y="14" width="10" height="10" rx="1.5"/><rect x="96" y="14" width="10" height="10" rx="1.5"/><rect x="12" y="28" width="10" height="10" rx="1.5"/><rect x="26" y="28" width="10" height="10" rx="1.5"/><rect x="40" y="28" width="10" height="10" rx="1.5"/><rect x="54" y="28" width="10" height="10" rx="1.5"/><rect x="68" y="28" width="10" height="10" rx="1.5"/><rect x="82" y="28" width="10" height="10" rx="1.5"/><rect x="96" y="28" width="10" height="10" rx="1.5"/><rect x="12" y="42" width="10" height="10" rx="1.5"/><rect x="26" y="42" width="10" height="10" rx="1.5"/><rect x="40" y="42" width="10" height="10" rx="1.5"/><rect x="54" y="42" width="10" height="10" rx="1.5"/><rect x="68" y="42" width="10" height="10" rx="1.5"/><rect x="82" y="42" width="10" height="10" rx="1.5"/><rect x="96" y="42" width="10" height="10" rx="1.5"/><rect x="12" y="56" width="10" height="10" rx="1.5"/><rect x="26" y="56" width="10" height="10" rx="1.5"/><rect x="40" y="56" width="10" height="10" rx="1.5"/><rect x="54" y="56" width="10" height="10" rx="1.5"/><rect x="68" y="56" width="10" height="10" rx="1.5"/><rect x="82" y="56" width="10" height="10" rx="1.5"/><rect x="96" y="56" width="10" height="10" rx="1.5"/></svg></div>
+          <span class="meta">кубик 1 см · 10 мин</span><h3>Мисо-суп</h3><p>Положить мелкие кубики в бульон с пастой мисо в самом конце, не кипятить.</p>
+        </div>
+        <div class="recipe">
+          <div class="cut"><svg viewBox="0 0 120 80" aria-hidden="true"><circle cx="24" cy="26" r="9"/><circle cx="44" cy="20" r="6"/><circle cx="62" cy="30" r="10"/><circle cx="84" cy="22" r="7"/><circle cx="100" cy="36" r="8"/><circle cx="30" cy="50" r="7"/><circle cx="50" cy="56" r="9"/><circle cx="74" cy="54" r="6"/><circle cx="92" cy="58" r="8"/><circle cx="16" cy="62" r="5"/><circle cx="64" cy="70" r="4"/><circle cx="40" cy="38" r="4"/></svg></div>
+          <span class="meta">размять вилкой · 10 мин</span><h3>Скрэмбл</h3><p>Обжарить с луком и щепоткой куркумы, как яичницу.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block g" id="supply" style="padding-top:0">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>Ближайшие поставки</h2>
+        <p>Привозим тофу по графику. Блоки из ближайшей поставки можно забронировать и забрать в день привоза.</p>
+      </div>
+      <div class="supply" id="supplyList" aria-live="polite"></div>
+      <p class="supply-note">График обновляем каждую неделю. Если нужной даты нет, позвоните, подскажем, когда следующий привоз.</p>
+      <div class="soon">
+        <div>
+          <h3>Что появится скоро</h3>
+          <p class="lead2">Планы на ближайшие месяцы. Напишите, если хотите узнать о запуске первыми.</p>
+        </div>
+        <ul>
+          <li><span class="m">ноябрь</span><b>Ozon и Wildberries</b><span>Оба размера с доставкой в пункты выдачи.</span></li>
+          <li><span class="m">ноябрь</span><b>Сеть «Название»</b><span>Ещё 4 магазина в городе.</span></li>
+          <li><span class="m">декабрь</span><b>Копчёный тофу</b><span>Новый вкус в блоке 300 г.</span></li>
+          <li><span class="m">декабрь</span><b>Доставка в соседний город</b><span>Раз в неделю для магазинов и кафе.</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="block g" id="buy" style="padding-top:0">
+    <div class="wrap">
+      <div class="sec-head"><h2>Где купить</h2></div>
+      <div class="buy">
+        <div class="list">
+          <div><b>Магазин «Название»</b><span>пр. Примерный, 10</span></div>
+          <div><b>Магазин «Название»</b><span>ул. Образцовая, 5</span></div>
+          <div><b>Кафе «Название»</b><span>в меню с тофу</span></div>
+          <div><b>Самовывоз с производства</b><span>ул. Примерная, 1</span></div>
+        </div>
+        <div class="opt">
+          <h3>Магазинам и кафе</h3>
+          <p>Поставляем в магазины здорового питания, кафе и столовые. Прайс и график отгрузок пришлём по запросу.</p>
+          <dl><dt>Минимальная партия</dt><dd>20 блоков</dd><dt>Отгрузка</dt><dd>2 раза в неделю</dd><dt>Документы</dt><dd>декларация, ЭДО</dd></dl>
+          <a class="btn" href="#contacts">Запросить прайс</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="foot g" id="contacts">
+  <div class="wrap">
+    <div class="contacts">
+      <div>
+        <h2>Позвоните или напишите</h2>
+        <p class="phone">+7 (000) 000-00-00</p>
+        <div class="chips"><span>Telegram</span><span>WhatsApp</span><span>tofu@example.ru</span></div>
+        <p class="addr muted">Производство: г. Город, ул. Примерная, 1. Самовывоз по будням с 9 до 18.</p>
+      </div>
+      <form class="cb" id="cb" novalidate>
+        <h3>Перезвоним сами</h3>
+        <label for="cb-name">Имя<input type="text" id="cb-name" autocomplete="name"></label>
+        <label for="cb-phone">Телефон<input type="tel" id="cb-phone" autocomplete="tel" placeholder="+7"></label>
+        <button class="btn soy" type="submit">Перезвоните мне</button>
+        <p class="msg" id="cb-msg" hidden>Это макет, заявка никуда не ушла. На готовом сайте она будет приходить вам в Telegram или на почту.</p>
+      </form>
+    </div>
+    <div class="word" id="word">Соевая лавка</div>
+    <div class="legal"><span>ИП Фамилия И. О., ИНН 000000000000</span><span>Свежий тофу каждый день</span></div>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var hasGsap = typeof window.gsap !== 'undefined';
+  var hasST = hasGsap && typeof window.ScrollTrigger !== 'undefined';
+  if (hasST) gsap.registerPlugin(ScrollTrigger);
+
+  /* ---------- Lenis: плавный скролл ---------- */
+  var lenis = null;
+  if (!reduce && typeof window.Lenis !== 'undefined') {
+    lenis = new Lenis({ lerp: 0.1 });
+    if (hasST) {
+      lenis.on('scroll', ScrollTrigger.update);
+      gsap.ticker.add(function (t) { lenis.raf(t * 1000); });
+      gsap.ticker.lagSmoothing(0);
+    } else {
+      (function raf(t) { lenis.raf(t); requestAnimationFrame(raf); })(0);
+    }
+  }
+  document.querySelectorAll('a[href^="#"]').forEach(function (a) {
+    a.addEventListener('click', function (e) {
+      var id = a.getAttribute('href');
+      var el = id.length > 1 ? document.querySelector(id) : document.body;
+      if (!el) return;
+      e.preventDefault();
+      if (lenis) lenis.scrollTo(el, { offset: -64 }); else el.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth' });
+    });
+  });
+
+  /* ---------- three.js: блок на доске, режется при прокрутке ---------- */
+  var SIZES = {
+    '300': { w: 1.0, h: 0.4, d: 0.7, n: [5, 2, 3], title: 'Целый блок 300 г', meta: '10 × 7 × 4 см · на 2–3 порции' },
+    '500': { w: 1.2, h: 0.5, d: 0.8, n: [6, 2, 4], title: 'Целый блок 500 г', meta: '12 × 8 × 5 см · на 4–5 порций' }
+  };
+  var size = '500';
+  var state = { p: 0 };
+  var stage = document.getElementById('stage');
+  var canvas = document.getElementById('gl');
+  var api = null;
+
+  function roundedBox(w, h, d, r, seg) {
+    var g = new THREE.BoxGeometry(w, h, d, seg, seg, seg);
+    var pos = g.attributes.position, nor = g.attributes.normal;
+    var v = new THREE.Vector3(), c = new THREE.Vector3(), n = new THREE.Vector3();
+    var hw = w / 2 - r, hh = h / 2 - r, hd = d / 2 - r;
+    for (var i = 0; i < pos.count; i++) {
+      v.fromBufferAttribute(pos, i);
+      c.set(Math.max(-hw, Math.min(hw, v.x)), Math.max(-hh, Math.min(hh, v.y)), Math.max(-hd, Math.min(hd, v.z)));
+      n.subVectors(v, c);
+      if (n.lengthSq() > 1e-10) { n.normalize(); v.copy(c).addScaledVector(n, r); pos.setXYZ(i, v.x, v.y, v.z); nor.setXYZ(i, n.x, n.y, n.z); }
+    }
+    return g;
+  }
+  function canvasTex(draw, rep) {
+    var cv = document.createElement('canvas'); cv.width = cv.height = 512;
+    draw(cv.getContext('2d'));
+    var t = new THREE.CanvasTexture(cv); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rep, rep);
+    return t;
+  }
+  function rnd(a, b) { return a + Math.random() * (b - a); }
+
+  function initGL() {
+    if (typeof window.THREE === 'undefined') return null;
+    var renderer;
+    try { renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true }); } catch (e) { return null; }
+    if (!renderer.getContext()) return null;
+    stage.classList.add('gl');
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.outputEncoding = THREE.sRGBEncoding;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFShadowMap;
+
+    var scene = new THREE.Scene();
+    var camera = new THREE.PerspectiveCamera(30, 1, 0.1, 50);
+
+    scene.add(new THREE.HemisphereLight(0xffffff, 0x26355c, 0.6));
+    var key = new THREE.DirectionalLight(0xfff3df, 0.95);
+    key.position.set(1.4, 5, 2.4); key.castShadow = true;
+    key.shadow.mapSize.set(2048, 2048); key.shadow.radius = 5; key.shadow.bias = -0.0006;
+    key.shadow.camera.left = -2.5; key.shadow.camera.right = 2.5; key.shadow.camera.top = 2.5; key.shadow.camera.bottom = -2.5;
+    scene.add(key);
+    var rim = new THREE.DirectionalLight(0xa9b8ff, 0.35); rim.position.set(-3, 2, -3); scene.add(rim);
+
+    var floor = new THREE.Mesh(new THREE.PlaneGeometry(16, 16), new THREE.ShadowMaterial({ opacity: 0.35 }));
+    floor.rotation.x = -Math.PI / 2; floor.position.y = -0.1; floor.receiveShadow = true; scene.add(floor);
+
+    var woodTex = canvasTex(function (x) {
+      x.fillStyle = '#c99d69'; x.fillRect(0, 0, 512, 512);
+      for (var i = 0; i < 140; i++) {
+        x.strokeStyle = 'rgba(' + (Math.random() < .5 ? '120,80,40' : '230,190,140') + ',' + rnd(.05, .18) + ')';
+        x.lineWidth = rnd(1, 4); x.beginPath();
+        var y = rnd(0, 512); x.moveTo(0, y);
+        for (var s = 0; s <= 512; s += 32) x.lineTo(s, y + Math.sin(s / rnd(40, 90)) * rnd(2, 6));
+        x.stroke();
+      }
+    }, 1);
+    var board = new THREE.Mesh(roundedBox(3.0, 0.1, 1.9, 0.04, 6),
+      new THREE.MeshStandardMaterial({ color: new THREE.Color('#ffffff'), map: woodTex, roughness: 0.65 }));
+    board.position.y = -0.05; board.castShadow = true; board.receiveShadow = true; scene.add(board);
+
+    var poreTex = canvasTex(function (x) {
+      x.fillStyle = '#ffffff'; x.fillRect(0, 0, 512, 512);
+      for (var i = 0; i < 6500; i++) {
+        x.fillStyle = 'rgba(150,132,96,' + rnd(.04, .24) + ')';
+        x.beginPath(); x.arc(rnd(0, 512), rnd(0, 512), rnd(.3, 1.7), 0, 6.283); x.fill();
+      }
+    }, 1.4);
+    var tofuMat = new THREE.MeshStandardMaterial({ color: new THREE.Color('#EAE0C6').convertSRGBToLinear(), map: poreTex, bumpMap: poreTex, bumpScale: 0.005, roughness: 0.85 });
+
+    var group = new THREE.Group(); scene.add(group);
+    var solid = null, cubes = [];
+
+    function ease(t) { return t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
+    var tmp = new THREE.Vector3();
+    function apply() {
+      if (!solid) return;
+      var p = state.p;
+      var cut = p > 0.004;
+      solid.visible = !cut;
+      cubes.forEach(function (c) {
+        c.mesh.visible = cut;
+        if (!cut) return;
+        var lp = Math.max(0, Math.min(1, (p - c.delay * 0.9) / 0.5));
+        var e = ease(lp);
+        tmp.lerpVectors(c.base, c.target, e);
+        tmp.y += Math.sin(lp * Math.PI) * 0.32;
+        c.mesh.position.copy(tmp);
+        c.mesh.rotation.set(Math.sin(lp * Math.PI) * c.rx * 0.6, c.ry * e, 0);
+      });
+    }
+
+    function build(key) {
+      var S = SIZES[key];
+      if (solid) { group.remove(solid); solid.geometry.dispose(); }
+      cubes.forEach(function (c) { group.remove(c.mesh); });
+      if (cubes[0]) cubes[0].mesh.geometry.dispose();
+      cubes = [];
+      solid = new THREE.Mesh(roundedBox(S.w, S.h, S.d, 0.035, 16), tofuMat);
+      solid.position.y = S.h / 2; solid.castShadow = true; solid.receiveShadow = true; group.add(solid);
+
+      var nx = S.n[0], ny = S.n[1], nz = S.n[2];
+      var sx = S.w / nx, sy = S.h / ny, sz = S.d / nz;
+      var geo = roundedBox(sx * 0.985, sy * 0.985, sz * 0.985, 0.018, 4);
+      var N = nx * ny * nz;
+      var cols = Math.ceil(Math.sqrt(N * 1.7)), rows = Math.ceil(N / cols);
+      var gx = Math.min(2.6 / cols, sx * 1.7), gz = Math.min(1.6 / rows, sz * 1.7);
+      var targets = [];
+      for (var t = 0; t < N; t++) {
+        var c = t % cols, r = Math.floor(t / cols);
+        targets.push(new THREE.Vector3((c - (cols - 1) / 2) * gx + rnd(-.02, .02), sy / 2, (r - (rows - 1) / 2) * gz + rnd(-.02, .02)));
+      }
+      var list = [];
+      for (var i = 0; i < nx; i++) for (var j = 0; j < ny; j++) for (var k = 0; k < nz; k++) {
+        list.push({ base: new THREE.Vector3(-S.w / 2 + sx * (i + .5), sy * (j + .5), -S.d / 2 + sz * (k + .5)), top: j === ny - 1 });
+      }
+      list.sort(function (a, b) { return (a.base.z - b.base.z) * 10 + (a.base.x - b.base.x); });
+      targets.sort(function (a, b) { return (a.z - b.z) * 10 + (a.x - b.x); });
+      list.forEach(function (it, idx) {
+        var m = new THREE.Mesh(geo, tofuMat); m.castShadow = true; m.receiveShadow = true; m.visible = false;
+        group.add(m);
+        cubes.push({ mesh: m, base: it.base, target: targets[idx], delay: (it.top ? 0 : 0.22) + rnd(0, 0.2), ry: rnd(-.5, .5), rx: rnd(-1, 1) });
+      });
+      apply();
+    }
+
+    var W = 1, H = 1;
+    function resize() {
+      W = stage.clientWidth; H = stage.clientHeight;
+      renderer.setSize(W, H, false);
+      camera.aspect = W / H;
+      var far = W / H < 1.1 ? 1.35 : 1;
+      camera.position.set(0, 2.7 * far, 3.9 * far);
+      camera.lookAt(0, 0.05, 0);
+      camera.updateProjectionMatrix();
+    }
+    resize();
+    if (window.ResizeObserver) new ResizeObserver(resize).observe(stage); else window.addEventListener('resize', resize);
+
+    var tRot = 0, rot = 0;
+    window.addEventListener('pointermove', function (e) { tRot = (e.clientX / window.innerWidth - 0.5) * 0.5; });
+
+    var visible = true;
+    if (window.IntersectionObserver) new IntersectionObserver(function (en) { visible = en[0].isIntersecting; }).observe(stage);
+    var clock = new THREE.Clock();
+
+    build(size);
+    (function tick() {
+      requestAnimationFrame(tick);
+      if (!visible) return;
+      var t = clock.getElapsedTime();
+      rot += (tRot - rot) * 0.05;
+      group.rotation.y = -0.35 + rot + (reduce ? 0 : Math.sin(t * 0.3) * 0.05);
+      board.rotation.y = group.rotation.y;
+      apply();
+      renderer.render(scene, camera);
+    })();
+
+    return { build: build, group: group };
+  }
+
+  var titleEl = document.getElementById('stateTitle'), metaEl = document.getElementById('stateMeta');
+  function updateState() {
+    var S = SIZES[size], N = S.n[0] * S.n[1] * S.n[2];
+    if (state.p > 0.5) { titleEl.textContent = N + ' кубиков по 2 см'; metaEl.textContent = 'для жарки, салата и супа'; }
+    else { titleEl.textContent = S.title; metaEl.textContent = S.meta; }
+  }
+  document.querySelectorAll('.sizes button').forEach(function (b) {
+    b.addEventListener('click', function () {
+      size = b.dataset.size;
+      document.querySelectorAll('.sizes button').forEach(function (x) { x.classList.toggle('on', x === b); });
+      if (api) {
+        api.build(size);
+        if (hasGsap && !reduce) gsap.fromTo(api.group.scale, { x: .92, y: .92, z: .92 }, { x: 1, y: 1, z: 1, duration: .5, ease: 'back.out(2)' });
+      }
+      updateState();
+    });
+  });
+
+  api = initGL();
+
+  /* ---------- GSAP + ScrollTrigger ---------- */
+  if (hasGsap && !reduce) {
+    gsap.from('.hero h1 .ln > span', { yPercent: 105, duration: 1.05, ease: 'power4.out', stagger: 0.1 });
+    gsap.from('.hero .lead, .sizes, .state, .scrollhint', { y: 14, opacity: 0, duration: .8, ease: 'power3.out', stagger: .08, delay: .35 });
+    if (api) gsap.from(api.group.position, { y: 1.2, duration: 1.1, ease: 'back.out(1.4)', delay: .2 });
+  }
+  if (hasST && !reduce) {
+    gsap.to(state, { p: 1, ease: 'none', onUpdate: updateState,
+      scrollTrigger: { trigger: '#hero', start: 'top 64px', end: '+=110%', pin: true, scrub: 0.8, anticipatePin: 1 } });
+
+    document.querySelectorAll('.statement .u').forEach(function (u, i) {
+      gsap.fromTo(u, { '--s': 0 }, { '--s': 1, ease: 'none',
+        scrollTrigger: { trigger: '.statement', start: 'top ' + (80 - i * 8) + '%', end: 'top ' + (55 - i * 8) + '%', scrub: true } });
+    });
+    gsap.fromTo('#word', { yPercent: 35 }, { yPercent: 0, ease: 'none',
+      scrollTrigger: { trigger: '#word', start: 'top bottom', end: 'bottom bottom', scrub: true } });
+  }
+
+  /* ---------- Ближайшие поставки ----------
+     Для готового сайта: вместо in (через сколько дней) пишите date: '2026-10-12'.
+     status: 'open' — можно забронировать, 'few' — осталось мало, 'full' — всё забронировано.
+     Прошедшие даты скрываются сами. */
+  var SUPPLIES = [
+    { in: 2,  where: 'Магазин «Название»', addr: 'пр. Примерный, 10, после 12:00', items: ['300 г', '500 г'], status: 'open' },
+    { in: 3,  where: 'Самовывоз с производства', addr: 'ул. Примерная, 1, с 9 до 18', items: ['300 г', '500 г'], status: 'few' },
+    { in: 5,  where: 'Оптовая отгрузка', addr: 'магазины и кафе, заявки за 2 дня', items: ['300 г', '500 г'], status: 'full' },
+    { in: 9,  where: 'Магазин «Название»', addr: 'ул. Образцовая, 5, после 14:00', items: ['300 г'], status: 'open' },
+    { in: 12, where: 'Оптовая отгрузка', addr: 'магазины и кафе, заявки за 2 дня', items: ['300 г', '500 г'], status: 'open' }
+  ];
+  (function renderSupplies() {
+    var box = document.getElementById('supplyList'); if (!box) return;
+    var today = new Date(); today.setHours(0, 0, 0, 0);
+    var label = { open: 'Можно забронировать', few: 'Осталось мало', full: 'Всё забронировано' };
+    var esc = function (t) { var d = document.createElement('div'); d.textContent = t; return d.innerHTML; };
+    var rows = SUPPLIES.map(function (s) {
+      var d = s.date ? new Date(s.date + 'T00:00:00') : new Date(today.getTime() + s.in * 864e5);
+      return { s: s, d: d };
+    }).filter(function (r) { return r.d >= today; }).sort(function (a, b) { return a.d - b.d; });
+    if (!rows.length) { box.innerHTML = '<div class="sup"><div class="w"><b>Скоро добавим новые даты</b><span>Позвоните, подскажем ближайший привоз.</span></div></div>'; return; }
+    box.innerHTML = rows.map(function (r) {
+      var s = r.s, d = r.d;
+      var day = d.getDate();
+      var mon = d.toLocaleDateString('ru-RU', { month: 'long', day: 'numeric' }).replace(/^\d+\s*/, '');
+      var wd = d.toLocaleDateString('ru-RU', { weekday: 'short' });
+      return '<div class="sup">' +
+        '<div class="d"><b>' + day + '</b><span>' + esc(mon) + ', ' + esc(wd) + '</span></div>' +
+        '<div class="w"><b>' + esc(s.where) + '</b><span>' + esc(s.addr) + '</span></div>' +
+        '<div class="it">' + s.items.map(function (i) { return '<span>' + esc(i) + '</span>'; }).join('') + '</div>' +
+        '<div class="act"><span class="st ' + s.status + '">' + label[s.status] + '</span>' +
+        (s.status === 'full' ? '' : '<a href="#contacts">Забронировать</a>') + '</div>' +
+        '</div>';
+    }).join('');
+    box.querySelectorAll('a[href="#contacts"]').forEach(function (a) {
+      a.addEventListener('click', function (e) {
+        e.preventDefault();
+        var el = document.getElementById('contacts');
+        if (lenis) lenis.scrollTo(el, { offset: -64 }); else el.scrollIntoView();
+      });
+    });
+  })();
+
+  /* ---------- Swiper: этапы производства ---------- */
+  if (typeof window.Swiper !== 'undefined') {
+    new Swiper('.steps-swiper', {
+      slidesPerView: 1.15, spaceBetween: 16, speed: 600, grabCursor: true, keyboard: { enabled: true },
+      navigation: { nextEl: '.navs .next', prevEl: '.navs .prev' },
+      pagination: { el: '.prog', type: 'progressbar' },
+      breakpoints: { 640: { slidesPerView: 2.1, spaceBetween: 18 }, 1024: { slidesPerView: 3.2, spaceBetween: 20 } }
+    });
+  } else {
+    var w = document.querySelector('.steps-swiper .swiper-wrapper');
+    w.style.cssText = 'display:grid;grid-auto-flow:column;grid-auto-columns:minmax(260px,1fr);gap:16px;overflow-x:auto';
+  }
+
+  document.getElementById('cb').addEventListener('submit', function (e) { e.preventDefault(); document.getElementById('cb-msg').hidden = false; });
+})();
+</script>
+</body>
+</html>
